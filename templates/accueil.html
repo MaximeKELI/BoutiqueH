@@ -16,14 +16,17 @@
             </div>
             
             <div class="buttons">
-                <a href="/admin/" class="btn btn-primary">
-                    🔐 Administration
+                <a href="{% url 'catalogue' %}" class="btn btn-primary">
+                    🛍️ Voir le Catalogue
                 </a>
                 {% if user.is_authenticated and user.is_staff %}
-                <a href="/dashboard/" class="btn btn-secondary">
-                    📊 Tableau de Bord
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    📊 Tableau de Bord Admin
                 </a>
                 {% endif %}
+                <a href="/admin/" class="btn btn-secondary">
+                    🔐 Administration
+                </a>
             </div>
             
             <div class="info">

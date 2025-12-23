@@ -1,0 +1,51 @@
+{% extends 'client/base_client.html' %}
+{% load static %}
+
+{% block title %}Mes Commandes - La Gloire de Dieu{% endblock %}
+
+{% block content %}
+<div class="commandes-container">
+    <h1>📦 Mes Commandes</h1>
+    
+    {% if commandes %}
+    <div class="commandes-list">
+        {% for commande in commandes %}
+        <div class="commande-card">
+            <div class="commande-header">
+                <div>
+                    <h3>Commande #{{ commande.numero_commande }}</h3>
+                    <p class="commande-date">Date: {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="commande-statut statut-{{ commande.statut }}">
+                    {{ commande.get_statut_display }}
+                </div>
+            </div>
+            
+            <div class="commande-details">
+                <div class="commande-total">
+                    <strong>Total: {{ commande.montant_total|floatformat:0 }} FCFA</strong>
+                </div>
+                <div class="commande-items-count">
+                    {{ commande.panier.items.count }} article(s)
+                </div>
+            </div>
+            
+            <div class="commande-actions">
+                <a href="{% url 'detail_commande' commande.id %}" class="btn btn-primary btn-sm">
+                    Voir les détails
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-commandes">
+        <div class="empty-icon">📦</div>
+        <h2>Aucune commande</h2>
+        <p>Vous n'avez pas encore passé de commande</p>
+        <a href="{% url 'catalogue' %}" class="btn btn-primary">Voir le catalogue</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -61,7 +61,7 @@
                     <span class="total-price">{{ total|floatformat:0 }} FCFA</span>
                 </div>
                 
-                <form method="post" action="{% url 'passer_commande %}">
+                <form method="post" action="{% url 'passer_commande' %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary btn-large btn-block">
                         ✅ Passer la commande

@@ -1,0 +1,63 @@
+{% extends 'client/base_client.html' %}
+{% load static %}
+
+{% block title %}Commande #{{ commande.numero_commande }} - La Gloire de Dieu{% endblock %}
+
+{% block content %}
+<div class="commande-detail-container">
+    <a href="{% url 'mes_commandes' %}" class="back-link">← Retour à mes commandes</a>
+    
+    <div class="commande-detail-header">
+        <h1>Commande #{{ commande.numero_commande }}</h1>
+        <div class="commande-statut-large statut-{{ commande.statut }}">
+            {{ commande.get_statut_display }}
+        </div>
+    </div>
+    
+    <div class="commande-info">
+        <div class="info-card">
+            <h3>Informations de commande</h3>
+            <p><strong>Date:</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+            <p><strong>Numéro:</strong> {{ commande.numero_commande }}</p>
+            <p><strong>Statut:</strong> {{ commande.get_statut_display }}</p>
+            {% if commande.date_livraison %}
+            <p><strong>Date de livraison:</strong> {{ commande.date_livraison|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-card">
+            <h3>Résumé</h3>
+            <p><strong>Total:</strong> {{ commande.montant_total|floatformat:0 }} FCFA</p>
+            <p><strong>Articles:</strong> {{ items|length }}</p>
+        </div>
+    </div>
+    
+    <div class="commande-items">
+        <h2>Articles commandés</h2>
+        <div class="items-list">
+            {% for item in items %}
+            <div class="commande-item">
+                <div class="item-image">
+                    {% if item.produit.image %}
+                        <img src="{{ item.produit.image.url }}" alt="{{ item.produit.nom }}">
+                    {% else %}
+                        <div class="no-image-small">📦</div>
+                    {% endif %}
+                </div>
+                <div class="item-info">
+                    <h4>{{ item.produit.nom }}</h4>
+                    <p>{{ item.produit.categorie.nom }}</p>
+                </div>
+                <div class="item-quantity">
+                    <span>Quantité: {{ item.quantite }}</span>
+                </div>
+                <div class="item-price">
+                    <span>{{ item.sous_total|floatformat:0 }} FCFA</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

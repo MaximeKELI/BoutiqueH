@@ -65,7 +65,7 @@ class PanierAdmin(admin.ModelAdmin):
 @admin.register(Produit)
 class ProduitAdmin(admin.ModelAdmin):
     list_display = ['nom', 'categorie', 'modele', 'prix_vente', 'quantite_stock', 'stock_status', 'marge_display', 'image_preview']
-    list_filter = ['categorie', 'modele', 'active', 'stock_faible', 'date_creation']
+    list_filter = ['categorie', 'modele', 'active', 'date_creation']
     search_fields = ['nom', 'description', 'code_barre']
     readonly_fields = ['date_creation', 'date_modification', 'marge_benefice', 'valeur_stock', 'image_preview', 'stock_status']
     fieldsets = (

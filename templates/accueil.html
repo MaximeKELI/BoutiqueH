@@ -19,20 +19,26 @@
                 <a href="{% url 'catalogue' %}" class="btn btn-primary">
                     🛍️ Voir le Catalogue
                 </a>
-                {% if user.is_authenticated and user.is_staff %}
-                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                    📊 Tableau de Bord Admin
+                {% if not user.is_authenticated %}
+                <a href="{% url 'inscription' %}" class="btn btn-secondary">
+                    ✨ S'inscrire
+                </a>
+                <a href="{% url 'connexion' %}" class="btn btn-secondary">
+                    🔐 Se connecter
+                </a>
+                {% else %}
+                <a href="{% url 'panier' %}" class="btn btn-secondary">
+                    🛒 Mon Panier
                 </a>
                 {% endif %}
-                <a href="/admin/" class="btn btn-secondary">
-                    🔐 Administration
-                </a>
             </div>
             
             <div class="info">
-                <p>Bienvenue dans le système de gestion de la boutique</p>
+                <p>Bienvenue dans la boutique La Gloire de Dieu</p>
                 {% if not user.is_authenticated %}
-                <p class="login-hint">Connectez-vous pour accéder au tableau de bord</p>
+                <p class="login-hint">Inscrivez-vous ou connectez-vous pour commencer vos achats</p>
+                {% else %}
+                <p class="login-hint">Bonjour {{ user.first_name|default:user.username }} ! Parcourez notre catalogue</p>
                 {% endif %}
             </div>
         </div>

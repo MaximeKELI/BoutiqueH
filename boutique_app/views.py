@@ -14,7 +14,10 @@ from collections import defaultdict
 
 
 def accueil(request):
-    """Page d'accueil avec liens vers l'admin et le dashboard"""
+    """Page d'accueil publique - uniquement pour les clients"""
+    # Rediriger vers le catalogue si l'utilisateur est déjà connecté
+    if request.user.is_authenticated:
+        return redirect('catalogue')
     return render(request, 'accueil.html')
 
 

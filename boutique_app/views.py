@@ -1,11 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout
+from django.contrib import messages
 from django.db.models import Sum, Count, Avg, Max, Min, Q, F
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from .models import Produit, Categorie, Commande, Vente, Panier, ItemPanier
+from .forms import InscriptionForm, AjoutPanierForm
 import json
 from collections import defaultdict
 
@@ -161,4 +164,265 @@ def dashboard(request):
     }
     
     return render(request, 'admin/dashboard.html', context)
+
+
+# ==================== VUES CLIENT ====================
+
+def inscription(request):
+    """Page d'inscription pour les clients"""
+    if request.user.is_authenticated:
+        return redirect('catalogue')
+    
+    if request.method == 'POST':
+        form = InscriptionForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Bienvenue {user.first_name} ! Votre compte a été créé avec succès.')
+            return redirect('catalogue')
+    else:
+        form = InscriptionForm()
+    
+    return render(request, 'client/inscription.html', {'form': form})
+
+
+def connexion_client(request):
+    """Page de connexion pour les clients"""
+    if request.user.is_authenticated:
+        return redirect('catalogue')
+    
+    if request.method == 'POST':
+        from django.contrib.auth import authenticate
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, f'Bienvenue {user.first_name} !')
+            next_url = request.GET.get('next', 'catalogue')
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
+    
+    return render(request, 'client/connexion.html')
+
+
+def deconnexion_client(request):
+    """Déconnexion du client"""
+    logout(request)
+    messages.success(request, 'Vous avez été déconnecté avec succès.')
+    return redirect('accueil')
+
+
+def catalogue(request):
+    """Catalogue des produits pour les clients"""
+    produits = Produit.objects.filter(active=True)
+    categories = Categorie.objects.filter(active=True)
+    
+    # Filtres
+    categorie_id = request.GET.get('categorie')
+    recherche = request.GET.get('recherche')
+    
+    if categorie_id:
+        produits = produits.filter(categorie_id=categorie_id)
+    
+    if recherche:
+        produits = produits.filter(
+            Q(nom__icontains=recherche) | Q(description__icontains=recherche)
+        )
+    
+    # Pagination simple
+    from django.core.paginator import Paginator
+    paginator = Paginator(produits, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'produits': page_obj,
+        'categories': categories,
+        'categorie_actuelle': int(categorie_id) if categorie_id else None,
+        'recherche': recherche,
+    }
+    
+    return render(request, 'client/catalogue.html', context)
+
+
+def detail_produit(request, produit_id):
+    """Page de détail d'un produit"""
+    produit = get_object_or_404(Produit, id=produit_id, active=True)
+    form = AjoutPanierForm()
+    
+    # Produits similaires (même catégorie)
+    produits_similaires = Produit.objects.filter(
+        categorie=produit.categorie,
+        active=True
+    ).exclude(id=produit.id)[:4]
+    
+    context = {
+        'produit': produit,
+        'form': form,
+        'produits_similaires': produits_similaires,
+    }
+    
+    return render(request, 'client/detail_produit.html', context)
+
+
+@login_required
+def ajouter_au_panier(request, produit_id):
+    """Ajouter un produit au panier"""
+    produit = get_object_or_404(Produit, id=produit_id, active=True)
+    
+    if request.method == 'POST':
+        quantite = int(request.POST.get('quantite', 1))
+        
+        if quantite > produit.quantite_stock:
+            messages.error(request, f'Stock insuffisant. Stock disponible: {produit.quantite_stock}')
+            return redirect('detail_produit', produit_id=produit_id)
+        
+        # Récupérer ou créer un panier en cours pour l'utilisateur
+        panier, created = Panier.objects.get_or_create(
+            utilisateur=request.user,
+            statut='en_cours',
+            defaults={}
+        )
+        
+        # Vérifier si le produit est déjà dans le panier
+        item, item_created = ItemPanier.objects.get_or_create(
+            panier=panier,
+            produit=produit,
+            defaults={'quantite': quantite, 'prix_unitaire': produit.prix_vente}
+        )
+        
+        if not item_created:
+            # Si l'item existe déjà, augmenter la quantité
+            nouvelle_quantite = item.quantite + quantite
+            if nouvelle_quantite > produit.quantite_stock:
+                messages.error(request, f'Stock insuffisant. Stock disponible: {produit.quantite_stock}')
+                return redirect('detail_produit', produit_id=produit_id)
+            item.quantite = nouvelle_quantite
+            item.save()
+        
+        messages.success(request, f'{produit.nom} ajouté au panier !')
+        return redirect('panier')
+    
+    return redirect('detail_produit', produit_id=produit_id)
+
+
+@login_required
+def panier(request):
+    """Page du panier du client"""
+    panier_obj, created = Panier.objects.get_or_create(
+        utilisateur=request.user,
+        statut='en_cours',
+        defaults={}
+    )
+    
+    items = panier_obj.items.all()
+    total = panier_obj.total
+    
+    context = {
+        'panier': panier_obj,
+        'items': items,
+        'total': total,
+    }
+    
+    return render(request, 'client/panier.html', context)
+
+
+@login_required
+def modifier_quantite_panier(request, item_id):
+    """Modifier la quantité d'un article dans le panier"""
+    item = get_object_or_404(ItemPanier, id=item_id, panier__utilisateur=request.user)
+    
+    if request.method == 'POST':
+        quantite = int(request.POST.get('quantite', 1))
+        
+        if quantite <= 0:
+            item.delete()
+            messages.success(request, 'Article retiré du panier.')
+        elif quantite > item.produit.quantite_stock:
+            messages.error(request, f'Stock insuffisant. Stock disponible: {item.produit.quantite_stock}')
+        else:
+            item.quantite = quantite
+            item.save()
+            messages.success(request, 'Quantité mise à jour.')
+    
+    return redirect('panier')
+
+
+@login_required
+def retirer_du_panier(request, item_id):
+    """Retirer un article du panier"""
+    item = get_object_or_404(ItemPanier, id=item_id, panier__utilisateur=request.user)
+    item.delete()
+    messages.success(request, 'Article retiré du panier.')
+    return redirect('panier')
+
+
+@login_required
+def passer_commande(request):
+    """Passer une commande depuis le panier"""
+    panier_obj = get_object_or_404(
+        Panier,
+        utilisateur=request.user,
+        statut='en_cours'
+    )
+    
+    if not panier_obj.items.exists():
+        messages.error(request, 'Votre panier est vide.')
+        return redirect('panier')
+    
+    # Vérifier le stock de tous les articles
+    for item in panier_obj.items.all():
+        if item.quantite > item.produit.quantite_stock:
+            messages.error(
+                request,
+                f'Stock insuffisant pour {item.produit.nom}. Stock disponible: {item.produit.quantite_stock}'
+            )
+            return redirect('panier')
+    
+    # Créer la commande
+    commande = Commande.objects.create(
+        panier=panier_obj,
+        montant_total=panier_obj.total,
+        statut='en_attente'
+    )
+    
+    # Marquer le panier comme validé
+    panier_obj.statut = 'valide'
+    panier_obj.save()
+    
+    messages.success(request, f'Commande #{commande.numero_commande} passée avec succès !')
+    return redirect('mes_commandes')
+
+
+@login_required
+def mes_commandes(request):
+    """Liste des commandes du client"""
+    commandes = Commande.objects.filter(
+        panier__utilisateur=request.user
+    ).order_by('-date_commande')
+    
+    context = {
+        'commandes': commandes,
+    }
+    
+    return render(request, 'client/mes_commandes.html', context)
+
+
+@login_required
+def detail_commande(request, commande_id):
+    """Détail d'une commande"""
+    commande = get_object_or_404(
+        Commande,
+        id=commande_id,
+        panier__utilisateur=request.user
+    )
+    
+    context = {
+        'commande': commande,
+        'items': commande.panier.items.all(),
+    }
+    
+    return render(request, 'client/detail_commande.html', context)
 

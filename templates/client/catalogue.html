@@ -1,0 +1,96 @@
+{% extends 'client/base_client.html' %}
+{% load static %}
+
+{% block title %}Catalogue - La Gloire de Dieu{% endblock %}
+
+{% block content %}
+<div class="catalogue-container">
+    <div class="catalogue-header">
+        <h1>🛍️ Notre Catalogue</h1>
+        <p>Découvrez tous nos produits</p>
+    </div>
+
+    <div class="catalogue-filters">
+        <form method="get" class="filter-form">
+            <div class="search-box">
+                <input type="text" name="recherche" placeholder="Rechercher un produit..." 
+                       value="{{ recherche }}" class="search-input">
+                <button type="submit" class="search-btn">🔍</button>
+            </div>
+            
+            <div class="category-filters">
+                <a href="{% url 'catalogue' %}" 
+                   class="category-filter {% if not categorie_actuelle %}active{% endif %}">
+                    Tous
+                </a>
+                {% for categorie in categories %}
+                <a href="?categorie={{ categorie.id }}" 
+                   class="category-filter {% if categorie_actuelle == categorie.id %}active{% endif %}">
+                    {{ categorie.nom }}
+                </a>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+
+    <div class="produits-grid">
+        {% for produit in produits %}
+        <div class="produit-card">
+            <div class="produit-image">
+                {% if produit.image %}
+                    <img src="{{ produit.image.url }}" alt="{{ produit.nom }}">
+                {% else %}
+                    <div class="no-image">📦</div>
+                {% endif %}
+                {% if produit.stock_faible %}
+                    <span class="badge badge-warning">Stock faible</span>
+                {% endif %}
+            </div>
+            
+            <div class="produit-info">
+                <h3 class="produit-nom">{{ produit.nom }}</h3>
+                <p class="produit-categorie">{{ produit.categorie.nom }}</p>
+                {% if produit.description %}
+                <p class="produit-description">{{ produit.description|truncatewords:15 }}</p>
+                {% endif %}
+                
+                <div class="produit-footer">
+                    <div class="produit-prix">
+                        <span class="prix">{{ produit.prix_vente|floatformat:0 }}</span>
+                        <span class="devise">FCFA</span>
+                    </div>
+                    
+                    {% if produit.quantite_stock > 0 %}
+                        <a href="{% url 'detail_produit' produit.id %}" class="btn btn-primary btn-sm">
+                            Voir détails
+                        </a>
+                    {% else %}
+                        <span class="btn btn-disabled">Rupture de stock</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-products">
+            <p>😔 Aucun produit trouvé</p>
+            <a href="{% url 'catalogue' %}" class="btn btn-primary">Voir tout le catalogue</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if produits.has_other_pages %}
+    <div class="pagination">
+        {% if produits.has_previous %}
+            <a href="?page={{ produits.previous_page_number }}" class="page-link">← Précédent</a>
+        {% endif %}
+        
+        <span class="page-info">Page {{ produits.number }} sur {{ produits.paginator.num_pages }}</span>
+        
+        {% if produits.has_next %}
+            <a href="?page={{ produits.next_page_number }}" class="page-link">Suivant →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

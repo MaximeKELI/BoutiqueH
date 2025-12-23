@@ -1,0 +1,23 @@
+{% extends 'client/base_client.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inscription - La Gloire de Dieu{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-title">✨ Créer un compte</h1>
+        <p class="auth-subtitle">Rejoignez La Gloire de Dieu</p>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {{ form|crispy }}
+            
+            <div class="auth-footer">
+                <p>Déjà un compte ? <a href="{% url 'connexion' %}">Connectez-vous</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

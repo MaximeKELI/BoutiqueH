@@ -1,0 +1,87 @@
+{% extends 'client/base_client.html' %}
+{% load static %}
+
+{% block title %}Mon Panier - La Gloire de Dieu{% endblock %}
+
+{% block content %}
+<div class="panier-container">
+    <h1>🛒 Mon Panier</h1>
+    
+    {% if items %}
+    <div class="panier-content">
+        <div class="panier-items">
+            {% for item in items %}
+            <div class="panier-item">
+                <div class="item-image">
+                    {% if item.produit.image %}
+                        <img src="{{ item.produit.image.url }}" alt="{{ item.produit.nom }}">
+                    {% else %}
+                        <div class="no-image-small">📦</div>
+                    {% endif %}
+                </div>
+                
+                <div class="item-details">
+                    <h3>{{ item.produit.nom }}</h3>
+                    <p class="item-category">{{ item.produit.categorie.nom }}</p>
+                    <p class="item-price-unit">{{ item.prix_unitaire|floatformat:0 }} FCFA / unité</p>
+                </div>
+                
+                <div class="item-quantity">
+                    <form method="post" action="{% url 'modifier_quantite_panier' item.id %}" class="quantity-form">
+                        {% csrf_token %}
+                        <input type="number" name="quantite" value="{{ item.quantite }}" 
+                               min="1" max="{{ item.produit.quantite_stock }}" 
+                               class="quantity-input-small" onchange="this.form.submit()">
+                    </form>
+                </div>
+                
+                <div class="item-total">
+                    <span class="item-total-price">{{ item.sous_total|floatformat:0 }} FCFA</span>
+                </div>
+                
+                <div class="item-actions">
+                    <form method="post" action="{% url 'retirer_du_panier' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-remove">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="panier-summary">
+            <div class="summary-card">
+                <h3>Résumé de la commande</h3>
+                <div class="summary-line">
+                    <span>Sous-total:</span>
+                    <span>{{ total|floatformat:0 }} FCFA</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total:</span>
+                    <span class="total-price">{{ total|floatformat:0 }} FCFA</span>
+                </div>
+                
+                <form method="post" action="{% url 'passer_commande %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-large btn-block">
+                        ✅ Passer la commande
+                    </button>
+                </form>
+                
+                <a href="{% url 'catalogue' %}" class="continue-shopping">
+                    ← Continuer les achats
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="panier-vide">
+        <div class="empty-cart-icon">🛒</div>
+        <h2>Votre panier est vide</h2>
+        <p>Ajoutez des produits depuis le catalogue</p>
+        <a href="{% url 'catalogue' %}" class="btn btn-primary">Voir le catalogue</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}La Gloire de Dieu - Boutique{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/client.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'catalogue' %}" class="logo">
+                <span class="logo-icon">✨</span>
+                <span class="logo-text">La Gloire de Dieu</span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="{% url 'catalogue' %}" class="nav-link">🛍️ Catalogue</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'panier' %}" class="nav-link">🛒 Panier</a>
+                    <a href="{% url 'mes_commandes' %}" class="nav-link">📦 Mes Commandes</a>
+                    <span class="nav-user">👤 {{ user.first_name|default:user.username }}</span>
+                    <a href="{% url 'deconnexion' %}" class="nav-link btn-logout">Déconnexion</a>
+                {% else %}
+                    <a href="{% url 'connexion' %}" class="nav-link">🔐 Connexion</a>
+                    <a href="{% url 'inscription' %}" class="nav-link btn-signup">S'inscrire</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 La Gloire de Dieu - Boutique d'Alimentation Générale</p>
+            <p>Tous droits réservés</p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

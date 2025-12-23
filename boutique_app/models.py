@@ -156,7 +156,10 @@ class Commande(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.numero_commande:
-            self.numero_commande = f"CMD-{timezone.now().strftime('%Y%m%d')}-{self.id or 'NEW'}"
+            # Générer un numéro unique basé sur le timestamp
+            import time
+            timestamp = int(time.time() * 1000) % 1000000
+            self.numero_commande = f"CMD-{timezone.now().strftime('%Y%m%d')}-{timestamp}"
         super().save(*args, **kwargs)
 
 

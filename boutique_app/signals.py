@@ -31,10 +31,8 @@ def calculer_montant_total(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=ItemPanier)
-def calculer_sous_total(sender, instance, **kwargs):
-    """Calcule automatiquement le sous-total de l'article"""
-    if instance.prix_unitaire and instance.quantite:
-        # Si le prix unitaire n'est pas défini, utiliser le prix de vente du produit
-        if not instance.prix_unitaire:
-            instance.prix_unitaire = instance.produit.prix_vente
+def definir_prix_unitaire(sender, instance, **kwargs):
+    """Définit automatiquement le prix unitaire si non défini"""
+    if not instance.prix_unitaire and instance.produit:
+        instance.prix_unitaire = instance.produit.prix_vente
 

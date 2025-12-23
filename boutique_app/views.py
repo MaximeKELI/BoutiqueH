@@ -79,16 +79,24 @@ def dashboard(request):
     ).order_by('-total_ventes')[:10]
     
     # Statistiques min/max
-    produits_stats = Produit.objects.filter(active=True).aggregate(
+    produits_actifs = Produit.objects.filter(active=True)
+    produits_stats = produits_actifs.aggregate(
         prix_min=Min('prix_vente'),
         prix_max=Max('prix_vente'),
         prix_moyen=Avg('prix_vente'),
         stock_min=Min('quantite_stock'),
         stock_max=Max('quantite_stock'),
-        stock_moyen=Avg('quantite_stock'),
-        marge_min=Min(F('prix_vente') - F('prix_achat')),
-        marge_max=Max(F('prix_vente') - F('prix_achat'))
+        stock_moyen=Avg('quantite_stock')
     )
+    
+    # Calculer marge min/max manuellement
+    if produits_actifs.exists():
+        marges = [(p.prix_vente - p.prix_achat) for p in produits_actifs]
+        produits_stats['marge_min'] = min(marges) if marges else 0
+        produits_stats['marge_max'] = max(marges) if marges else 0
+    else:
+        produits_stats['marge_min'] = 0
+        produits_stats['marge_max'] = 0
     
     # Prévisions (basées sur les tendances)
     ventes_derniers_mois = []

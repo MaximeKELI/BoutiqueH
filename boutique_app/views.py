@@ -52,8 +52,9 @@ def dashboard(request):
     
     # Produits en stock faible
     produits_stock_faible = Produit.objects.filter(
-        active=True,
-        quantite_stock__lte=F('quantite_minimum')
+        active=True
+    ).extra(
+        where=['quantite_stock <= quantite_minimum']
     ).count()
     
     # Statistiques par catégorie

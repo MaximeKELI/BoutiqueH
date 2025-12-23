@@ -10,6 +10,11 @@ import json
 from collections import defaultdict
 
 
+def accueil(request):
+    """Page d'accueil avec liens vers l'admin et le dashboard"""
+    return render(request, 'accueil.html')
+
+
 @staff_member_required
 def dashboard(request):
     """Dashboard principal avec toutes les statistiques"""

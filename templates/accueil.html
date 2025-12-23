@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Gloire de Dieu - Boutique d'Alimentation Générale</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/accueil.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-card">
+            <div class="logo">
+                <h1 class="glowing-title">✨ La Gloire de Dieu ✨</h1>
+                <p class="subtitle">Boutique d'Alimentation Générale</p>
+            </div>
+            
+            <div class="buttons">
+                <a href="/admin/" class="btn btn-primary">
+                    🔐 Administration
+                </a>
+                {% if user.is_authenticated and user.is_staff %}
+                <a href="/dashboard/" class="btn btn-secondary">
+                    📊 Tableau de Bord
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="info">
+                <p>Bienvenue dans le système de gestion de la boutique</p>
+                {% if not user.is_authenticated %}
+                <p class="login-hint">Connectez-vous pour accéder au tableau de bord</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

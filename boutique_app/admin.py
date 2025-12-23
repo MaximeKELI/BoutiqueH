@@ -41,8 +41,7 @@ class ModeleAdmin(admin.ModelAdmin):
 class ItemPanierInline(admin.TabularInline):
     model = ItemPanier
     extra = 0
-    readonly_fields = ['sous_total']
-    fields = ['produit', 'quantite', 'prix_unitaire', 'sous_total']
+    fields = ['produit', 'quantite', 'prix_unitaire']
 
 
 @admin.register(Panier)
@@ -67,7 +66,7 @@ class ProduitAdmin(admin.ModelAdmin):
     list_display = ['nom', 'categorie', 'modele', 'prix_vente', 'quantite_stock', 'stock_status', 'marge_display', 'image_preview']
     list_filter = ['categorie', 'modele', 'active', 'date_creation']
     search_fields = ['nom', 'description', 'code_barre']
-    readonly_fields = ['date_creation', 'date_modification', 'marge_benefice', 'valeur_stock', 'image_preview', 'stock_status']
+    readonly_fields = ['date_creation', 'date_modification', 'image_preview', 'stock_status']
     fieldsets = (
         ('Informations générales', {
             'fields': ('nom', 'description', 'categorie', 'modele', 'code_barre', 'image', 'image_preview')
@@ -75,9 +74,10 @@ class ProduitAdmin(admin.ModelAdmin):
         ('Prix et stock', {
             'fields': ('prix_achat', 'prix_vente', 'quantite_stock', 'quantite_minimum', 'stock_status')
         }),
-        ('Statistiques', {
-            'fields': ('marge_benefice', 'valeur_stock'),
-            'classes': ('collapse',)
+        ('Statistiques (calculées automatiquement)', {
+            'fields': (),
+            'classes': ('collapse',),
+            'description': 'La marge de bénéfice et la valeur du stock sont calculées automatiquement après la sauvegarde.'
         }),
         ('Paramètres', {
             'fields': ('active', 'date_creation', 'date_modification')
@@ -98,8 +98,15 @@ class ProduitAdmin(admin.ModelAdmin):
     
     def marge_display(self, obj):
         marge = obj.marge_benefice
-        color = 'green' if marge > 30 else 'orange' if marge > 15 else 'red'
-        return format_html('<span style="color: {}; font-weight: bold;">{:.1f}%</span>', color, marge)
+        if marge is None:
+            marge = 0
+        # S'assurer que marge est un nombre (pas un SafeString)
+        try:
+            marge_float = float(marge)
+        except (TypeError, ValueError):
+            marge_float = 0
+        color = 'green' if marge_float > 30 else 'orange' if marge_float > 15 else 'red'
+        return format_html('<span style="color: {}; font-weight: bold;">{:.1f}%</span>', color, marge_float)
     marge_display.short_description = "Marge"
 
 

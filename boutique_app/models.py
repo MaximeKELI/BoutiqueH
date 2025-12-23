@@ -65,14 +65,16 @@ class Produit(models.Model):
     @property
     def marge_benefice(self):
         """Calcule la marge de bénéfice"""
-        if self.prix_achat > 0:
+        if self.prix_achat and self.prix_vente and self.prix_achat > 0:
             return ((self.prix_vente - self.prix_achat) / self.prix_achat) * 100
         return 0
 
     @property
     def valeur_stock(self):
         """Valeur totale du stock"""
-        return self.quantite_stock * self.prix_achat
+        if self.prix_achat and self.quantite_stock:
+            return self.quantite_stock * self.prix_achat
+        return 0
 
     @property
     def stock_faible(self):
@@ -126,7 +128,9 @@ class ItemPanier(models.Model):
     @property
     def sous_total(self):
         """Calcule le sous-total"""
-        return self.quantite * self.prix_unitaire
+        if self.quantite and self.prix_unitaire:
+            return self.quantite * self.prix_unitaire
+        return 0
 
 
 class Commande(models.Model):

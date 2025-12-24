@@ -287,7 +287,16 @@ def ajouter_au_panier(request, produit_id):
     produit = get_object_or_404(Produit, id=produit_id, active=True)
     
     if request.method == 'POST':
-        quantite = int(request.POST.get('quantite', 1))
+        try:
+            quantite = int(request.POST.get('quantite', 1))
+        except (ValueError, TypeError):
+            messages.error(request, 'Quantité invalide.')
+            return redirect('detail_produit', produit_id=produit_id)
+        
+        # Validation de sécurité: quantité doit être positive et raisonnable
+        if quantite < 1 or quantite > 10000:
+            messages.error(request, 'Quantité invalide. Veuillez entrer une quantité entre 1 et 10000.')
+            return redirect('detail_produit', produit_id=produit_id)
         
         if quantite > produit.quantite_stock:
             messages.error(request, f'Stock insuffisant. Stock disponible: {produit.quantite_stock}')
@@ -352,7 +361,16 @@ def modifier_quantite_panier(request, item_id):
     item = get_object_or_404(ItemPanier, id=item_id, panier__utilisateur=request.user)
     
     if request.method == 'POST':
-        quantite = int(request.POST.get('quantite', 1))
+        try:
+            quantite = int(request.POST.get('quantite', 1))
+        except (ValueError, TypeError):
+            messages.error(request, 'Quantité invalide.')
+            return redirect('panier')
+        
+        # Validation de sécurité
+        if quantite < 0 or quantite > 10000:
+            messages.error(request, 'Quantité invalide.')
+            return redirect('panier')
         
         if quantite <= 0:
             item.delete()

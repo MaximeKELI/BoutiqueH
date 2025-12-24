@@ -39,14 +39,36 @@ class Modele(models.Model):
         return self.nom
 
 
+class Fournisseur(models.Model):
+    """Fournisseur de produits"""
+    nom = models.CharField(max_length=200)
+    contact = models.CharField(max_length=200, blank=True)
+    telephone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    adresse = models.TextField(blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    actif = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Fournisseur"
+        verbose_name_plural = "Fournisseurs"
+        ordering = ['nom']
+
+    def __str__(self):
+        return self.nom
+
+
 class Produit(models.Model):
     """Produit de la boutique"""
     nom = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, related_name='produits')
     modele = models.ForeignKey(Modele, on_delete=models.SET_NULL, null=True, blank=True, related_name='produits')
+    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.SET_NULL, null=True, blank=True, related_name='produits')
     prix_achat = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     prix_vente = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    prix_promo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal('0.01'))])
+    en_promotion = models.BooleanField(default=False)
     quantite_stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     quantite_minimum = models.IntegerField(default=10, validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='products/', blank=True, null=True)
@@ -64,10 +86,25 @@ class Produit(models.Model):
         return f"{self.nom} - {self.categorie.nom}"
 
     @property
+    def prix_affichage(self):
+        """Retourne le prix à afficher (promo si disponible, sinon prix normal)"""
+        if self.en_promotion and self.prix_promo:
+            return self.prix_promo
+        return self.prix_vente
+    
+    @property
+    def reduction(self):
+        """Calcule le pourcentage de réduction en promotion"""
+        if self.en_promotion and self.prix_promo and self.prix_vente > 0:
+            return ((self.prix_vente - self.prix_promo) / self.prix_vente) * 100
+        return 0
+    
+    @property
     def marge_benefice(self):
         """Calcule la marge de bénéfice"""
-        if self.prix_achat and self.prix_vente and self.prix_achat > 0:
-            return ((self.prix_vente - self.prix_achat) / self.prix_achat) * 100
+        prix_vente_reel = self.prix_affichage
+        if self.prix_achat and prix_vente_reel and self.prix_achat > 0:
+            return ((prix_vente_reel - self.prix_achat) / self.prix_achat) * 100
         return 0
 
     @property
@@ -165,6 +202,25 @@ class Commande(models.Model):
             timestamp = int(time.time() * 1000) % 1000000
             self.numero_commande = f"CMD-{timezone.now().strftime('%Y%m%d')}-{timestamp}"
         super().save(*args, **kwargs)
+
+
+class AvisProduit(models.Model):
+    """Avis/note sur un produit"""
+    produit = models.ForeignKey(Produit, on_delete=models.CASCADE, related_name='avis')
+    utilisateur = models.ForeignKey(User, on_delete=models.CASCADE, related_name='avis')
+    note = models.IntegerField(choices=[(i, i) for i in range(1, 6)], default=5)
+    commentaire = models.TextField(blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    approuve = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Avis"
+        verbose_name_plural = "Avis"
+        ordering = ['-date_creation']
+        unique_together = ['produit', 'utilisateur']
+
+    def __str__(self):
+        return f"Avis de {self.utilisateur.username} sur {self.produit.nom}"
 
 
 class Vente(models.Model):

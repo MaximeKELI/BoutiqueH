@@ -266,10 +266,16 @@ def detail_produit(request, produit_id):
         active=True
     ).exclude(id=produit.id)[:4]
     
+    # Avis approuvés
+    avis = AvisProduit.objects.filter(produit=produit, approuve=True).order_by('-date_creation')[:10]
+    note_moyenne = avis.aggregate(Avg('note'))['note__avg'] if avis.exists() else None
+    
     context = {
         'produit': produit,
         'form': form,
         'produits_similaires': produits_similaires,
+        'avis': avis,
+        'note_moyenne': note_moyenne,
     }
     
     return render(request, 'client/detail_produit.html', context)

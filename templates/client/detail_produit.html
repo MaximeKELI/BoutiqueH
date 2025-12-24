@@ -97,8 +97,13 @@
                     <h3 class="produit-nom">{{ produit_sim.nom }}</h3>
                     <div class="produit-footer">
                         <div class="produit-prix">
-                            <span class="prix">{{ produit_sim.prix_vente|floatformat:0 }}</span>
-                            <span class="devise">FCFA</span>
+                            {% if produit_sim.en_promotion and produit_sim.prix_promo %}
+                                <span class="prix-ancien">{{ produit_sim.prix_vente|floatformat:0 }} FCFA</span>
+                                <span class="prix-promo">{{ produit_sim.prix_promo|floatformat:0 }} FCFA</span>
+                            {% else %}
+                                <span class="prix">{{ produit_sim.prix_affichage|floatformat:0 }}</span>
+                                <span class="devise">FCFA</span>
+                            {% endif %}
                         </div>
                         <a href="{% url 'detail_produit' produit_sim.id %}" class="btn btn-primary btn-sm">
                             Voir

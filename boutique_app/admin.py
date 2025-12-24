@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Categorie, Modele, Produit, Panier, ItemPanier, Commande, Vente
+from .models import Categorie, Modele, Produit, Panier, ItemPanier, Commande, Vente, Fournisseur, AvisProduit
 
 
 @admin.register(Categorie)
@@ -55,18 +55,26 @@ class PanierAdmin(admin.ModelAdmin):
     nombre_items.short_description = "Articles"
 
 
+@admin.register(Fournisseur)
+class FournisseurAdmin(admin.ModelAdmin):
+    list_display = ['nom', 'contact', 'telephone', 'email', 'actif', 'date_creation']
+    list_filter = ['actif', 'date_creation']
+    search_fields = ['nom', 'contact', 'email', 'telephone']
+    readonly_fields = ['date_creation']
+
+
 @admin.register(Produit)
 class ProduitAdmin(admin.ModelAdmin):
-    list_display = ['nom', 'categorie', 'modele', 'prix_vente', 'quantite_stock', 'stock_status', 'marge_display', 'image_preview']
-    list_filter = ['categorie', 'modele', 'active', 'date_creation']
+    list_display = ['nom', 'categorie', 'modele', 'prix_affichage_display', 'quantite_stock', 'promotion_badge', 'stock_status', 'marge_display', 'image_preview']
+    list_filter = ['categorie', 'modele', 'fournisseur', 'en_promotion', 'active', 'date_creation']
     search_fields = ['nom', 'description', 'code_barre']
     readonly_fields = ['date_creation', 'date_modification', 'image_preview', 'stock_status']
     fieldsets = (
         ('Informations générales', {
-            'fields': ('nom', 'description', 'categorie', 'modele', 'code_barre', 'image', 'image_preview')
+            'fields': ('nom', 'description', 'categorie', 'modele', 'fournisseur', 'code_barre', 'image', 'image_preview')
         }),
         ('Prix et stock', {
-            'fields': ('prix_achat', 'prix_vente', 'quantite_stock', 'quantite_minimum', 'stock_status')
+            'fields': ('prix_achat', 'prix_vente', 'en_promotion', 'prix_promo', 'quantite_stock', 'quantite_minimum', 'stock_status')
         }),
         ('Statistiques (calculées automatiquement)', {
             'fields': (),
@@ -77,6 +85,20 @@ class ProduitAdmin(admin.ModelAdmin):
             'fields': ('active', 'date_creation', 'date_modification')
         }),
     )
+    
+    def prix_affichage_display(self, obj):
+        if obj.en_promotion and obj.prix_promo:
+            return format_html('<span style="text-decoration: line-through; color: #999;">{} FCFA</span><br><span style="color: red; font-weight: bold;">{} FCFA</span>', 
+                             obj.prix_vente, obj.prix_promo)
+        return f"{obj.prix_vente} FCFA"
+    prix_affichage_display.short_description = "Prix"
+    
+    def promotion_badge(self, obj):
+        if obj.en_promotion and obj.prix_promo:
+            reduction = obj.reduction
+            return format_html('<span style="background-color: red; color: white; padding: 3px 8px; border-radius: 5px; font-weight: bold;">-{:.0f}%</span>', reduction)
+        return "-"
+    promotion_badge.short_description = "Promo"
     
     def image_preview(self, obj):
         if obj.image:

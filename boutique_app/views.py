@@ -300,11 +300,14 @@ def ajouter_au_panier(request, produit_id):
             defaults={}
         )
         
+        # Utiliser le prix d'affichage (promo si disponible)
+        prix_vente = produit.prix_affichage
+        
         # Vérifier si le produit est déjà dans le panier
         item, item_created = ItemPanier.objects.get_or_create(
             panier=panier,
             produit=produit,
-            defaults={'quantite': quantite, 'prix_unitaire': produit.prix_vente}
+            defaults={'quantite': quantite, 'prix_unitaire': prix_vente}
         )
         
         if not item_created:

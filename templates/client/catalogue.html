@@ -20,8 +20,12 @@
             
             <div class="category-filters">
                 <a href="{% url 'catalogue' %}" 
-                   class="category-filter {% if not categorie_actuelle %}active{% endif %}">
+                   class="category-filter {% if not categorie_actuelle and not promotion_filter %}active{% endif %}">
                     Tous
+                </a>
+                <a href="?promotion=1" 
+                   class="category-filter {% if promotion_filter %}active{% endif %}" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f);">
+                    🔥 Promotions
                 </a>
                 {% for categorie in categories %}
                 <a href="?categorie={{ categorie.id }}" 

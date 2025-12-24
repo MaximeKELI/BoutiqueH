@@ -1,12 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
-from django.utils.safestring import mark_safe
 from .models import Categorie, Modele, Produit, Panier, ItemPanier, Commande, Vente
-from django.db.models import Sum, Count, Avg, Max, Min, Q
-from django.utils import timezone
-from datetime import timedelta
-import json
 
 
 @admin.register(Categorie)

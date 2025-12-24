@@ -42,3 +42,4 @@ class AjoutPanierForm(forms.ModelForm):
         model = ItemPanier
         fields = ['quantite']
 
+

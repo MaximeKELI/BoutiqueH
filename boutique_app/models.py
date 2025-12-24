@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
+import time
 
 
 class Categorie(models.Model):
@@ -161,7 +162,6 @@ class Commande(models.Model):
     def save(self, *args, **kwargs):
         if not self.numero_commande:
             # Générer un numéro unique basé sur le timestamp
-            import time
             timestamp = int(time.time() * 1000) % 1000000
             self.numero_commande = f"CMD-{timezone.now().strftime('%Y%m%d')}-{timestamp}"
         super().save(*args, **kwargs)

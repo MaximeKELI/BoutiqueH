@@ -10,3 +10,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'boutique.settings')
 
 application = get_wsgi_application()
 
+

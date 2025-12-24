@@ -60,3 +60,4 @@ echo "   - Admin: http://localhost:8000/admin/"
 echo "   - Dashboard: http://localhost:8000/dashboard/"
 echo ""
 
+

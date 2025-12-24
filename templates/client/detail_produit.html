@@ -110,6 +110,55 @@
         </div>
     </div>
     {% endif %}
+    
+    <!-- Section Avis -->
+    {% if note_moyenne %}
+    <div class="produit-avis-section">
+        <h3>⭐ Note moyenne: {{ note_moyenne|floatformat:1 }}/5</h3>
+    </div>
+    {% endif %}
+    
+    {% if user.is_authenticated %}
+    <div class="produit-avis-form">
+        <h3>Donner votre avis</h3>
+        <form method="post" action="{% url 'ajouter_avis' produit.id %}">
+            {% csrf_token %}
+            <div class="rating-input">
+                <label>Note:</label>
+                <select name="note" class="form-control" style="display: inline-block; width: auto;">
+                    <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                    <option value="4">4 ⭐⭐⭐⭐</option>
+                    <option value="3">3 ⭐⭐⭐</option>
+                    <option value="2">2 ⭐⭐</option>
+                    <option value="1">1 ⭐</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Commentaire (optionnel):</label>
+                <textarea name="commentaire" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Envoyer l'avis</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    {% if avis %}
+    <div class="produit-avis-list">
+        <h3>Avis clients ({{ avis|length }})</h3>
+        {% for avis_item in avis %}
+        <div class="avis-item">
+            <div class="avis-header">
+                <strong>{{ avis_item.utilisateur.first_name|default:avis_item.utilisateur.username }}</strong>
+                <span class="avis-note">{% for i in "12345" %}{% if forloop.counter <= avis_item.note %}⭐{% else %}☆{% endif %}{% endfor %}</span>
+                <span class="avis-date">{{ avis_item.date_creation|date:"d/m/Y" }}</span>
+            </div>
+            {% if avis_item.commentaire %}
+            <p class="avis-commentaire">{{ avis_item.commentaire }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 

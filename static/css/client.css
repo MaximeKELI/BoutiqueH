@@ -499,6 +499,35 @@ body::before {
     color: #000;
 }
 
+.badge-promo {
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    font-weight: 700;
+}
+
+.prix-ancien {
+    text-decoration: line-through;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    display: block;
+}
+
+.prix-promo {
+    color: #ff4444;
+    font-weight: 800;
+    font-size: 1.3rem;
+}
+
+.reduction {
+    background: rgba(239, 68, 68, 0.3);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
 .produit-info {
     padding: 20px;
 }

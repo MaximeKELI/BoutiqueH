@@ -36,6 +36,14 @@ class ItemPanierInline(admin.TabularInline):
     model = ItemPanier
     extra = 0
     fields = ['produit', 'quantite', 'prix_unitaire']
+    
+    def has_add_permission(self, request, obj=None):
+        """Seul le staff peut ajouter des items"""
+        return request.user.is_staff
+    
+    def has_delete_permission(self, request, obj=None):
+        """Seul le staff peut supprimer des items"""
+        return request.user.is_staff
 
 
 @admin.register(Panier)

@@ -495,8 +495,17 @@ def ajouter_avis(request, produit_id):
     produit = get_object_or_404(Produit, id=produit_id, active=True)
     
     if request.method == 'POST':
-        note = int(request.POST.get('note', 5))
+        try:
+            note = int(request.POST.get('note', 5))
+        except (ValueError, TypeError):
+            messages.error(request, 'Note invalide.')
+            return redirect('detail_produit', produit_id=produit_id)
+        
         commentaire = request.POST.get('commentaire', '').strip()
+        # Limiter la longueur du commentaire pour éviter les abus
+        if len(commentaire) > 1000:
+            messages.error(request, 'Le commentaire est trop long (maximum 1000 caractères).')
+            return redirect('detail_produit', produit_id=produit_id)
         
         if 1 <= note <= 5:
             avis, created = AvisProduit.objects.get_or_create(

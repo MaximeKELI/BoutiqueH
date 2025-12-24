@@ -25,8 +25,19 @@
             {% endif %}
             
             <div class="produit-prix-large">
-                <span class="prix">{{ produit.prix_vente|floatformat:0 }}</span>
-                <span class="devise">FCFA</span>
+                {% if produit.en_promotion and produit.prix_promo %}
+                    <div style="margin-bottom: 10px;">
+                        <span class="prix-ancien-large">{{ produit.prix_vente|floatformat:0 }} FCFA</span>
+                        <span class="reduction-large">-{{ produit.reduction|floatformat:0 }}%</span>
+                    </div>
+                    <div>
+                        <span class="prix">{{ produit.prix_promo|floatformat:0 }}</span>
+                        <span class="devise">FCFA</span>
+                    </div>
+                {% else %}
+                    <span class="prix">{{ produit.prix_affichage|floatformat:0 }}</span>
+                    <span class="devise">FCFA</span>
+                {% endif %}
             </div>
             
             {% if produit.description %}

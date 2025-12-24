@@ -148,3 +148,27 @@ LOGIN_REDIRECT_URL = '/catalogue/'
 # URLs pour l'administration (accès direct uniquement)
 ADMIN_LOGIN_URL = '/admin/login/'
 
+# Sécurité
+SECURE_BROWSER_XSS_FILTER = True  # Protection XSS
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Protection MIME sniffing
+X_FRAME_OPTIONS = 'DENY'  # Protection clickjacking
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# Sessions sécurisées
+SESSION_COOKIE_HTTPONLY = True  # Empêche l'accès JavaScript aux cookies de session
+SESSION_COOKIE_SAMESITE = 'Lax'  # Protection CSRF supplémentaire
+
+# CSRF Protection
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+
+# En production, activer HTTPS
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+

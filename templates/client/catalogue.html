@@ -46,6 +46,9 @@
                 {% else %}
                     <div class="no-image">📦</div>
                 {% endif %}
+                {% if produit.en_promotion %}
+                    <span class="badge badge-promo">🔥 Promo</span>
+                {% endif %}
                 {% if produit.stock_faible %}
                     <span class="badge badge-warning">Stock faible</span>
                 {% endif %}
@@ -60,8 +63,14 @@
                 
                 <div class="produit-footer">
                     <div class="produit-prix">
-                        <span class="prix">{{ produit.prix_vente|floatformat:0 }}</span>
-                        <span class="devise">FCFA</span>
+                        {% if produit.en_promotion and produit.prix_promo %}
+                            <span class="prix-ancien">{{ produit.prix_vente|floatformat:0 }} FCFA</span>
+                            <span class="prix-promo">{{ produit.prix_promo|floatformat:0 }} FCFA</span>
+                            <span class="reduction">-{{ produit.reduction|floatformat:0 }}%</span>
+                        {% else %}
+                            <span class="prix">{{ produit.prix_affichage|floatformat:0 }}</span>
+                            <span class="devise">FCFA</span>
+                        {% endif %}
                     </div>
                     
                     {% if produit.quantite_stock > 0 %}

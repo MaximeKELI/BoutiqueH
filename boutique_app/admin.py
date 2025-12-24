@@ -146,6 +146,17 @@ class CommandeAdmin(admin.ModelAdmin):
     statut_badge.short_description = "Statut"
 
 
+@admin.register(AvisProduit)
+class AvisProduitAdmin(admin.ModelAdmin):
+    list_display = ['produit', 'utilisateur', 'note', 'date_creation', 'approuve']
+    list_filter = ['note', 'approuve', 'date_creation']
+    search_fields = ['produit__nom', 'utilisateur__username', 'commentaire']
+    readonly_fields = ['date_creation']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('produit', 'utilisateur')
+
+
 @admin.register(Vente)
 class VenteAdmin(admin.ModelAdmin):
     list_display = ['produit', 'quantite', 'prix_unitaire', 'montant_total', 'date_vente']

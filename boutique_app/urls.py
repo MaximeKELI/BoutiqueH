@@ -25,5 +25,11 @@ urlpatterns = [
     # Commandes
     path('mes-commandes/', views.mes_commandes, name='mes_commandes'),
     path('commande/<int:commande_id>/', views.detail_commande, name='detail_commande'),
+    
+    # Avis produits
+    path('produit/<int:produit_id>/avis/', views.ajouter_avis, name='ajouter_avis'),
+    
+    # Export (admin)
+    path('export/ventes/', views.export_ventes, name='export_ventes'),
 ]
 

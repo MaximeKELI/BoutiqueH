@@ -7,7 +7,7 @@ from django.db.models import Sum, Count, Avg, Max, Min, Q, F
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
-from .models import Produit, Categorie, Commande, Vente, Panier, ItemPanier
+from .models import Produit, Categorie, Commande, Vente, Panier, ItemPanier, Fournisseur, AvisProduit
 from .forms import InscriptionForm, AjoutPanierForm
 import json
 from collections import defaultdict
@@ -225,6 +225,7 @@ def catalogue(request):
     # Filtres
     categorie_id = request.GET.get('categorie')
     recherche = request.GET.get('recherche')
+    promotion = request.GET.get('promotion') == '1'
     
     if categorie_id:
         produits = produits.filter(categorie_id=categorie_id)
@@ -233,6 +234,9 @@ def catalogue(request):
         produits = produits.filter(
             Q(nom__icontains=recherche) | Q(description__icontains=recherche)
         )
+    
+    if promotion:
+        produits = produits.filter(en_promotion=True)
     
     # Pagination simple
     from django.core.paginator import Paginator
@@ -245,6 +249,7 @@ def catalogue(request):
         'categories': categories,
         'categorie_actuelle': int(categorie_id) if categorie_id else None,
         'recherche': recherche,
+        'promotion_filter': promotion,
     }
     
     return render(request, 'client/catalogue.html', context)
@@ -428,4 +433,63 @@ def detail_commande(request, commande_id):
     }
     
     return render(request, 'client/detail_commande.html', context)
+
+
+@staff_member_required
+def export_ventes(request):
+    """Export des ventes en CSV"""
+    import csv
+    from django.http import HttpResponse
+    from datetime import datetime
+    
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="ventes_{datetime.now().strftime("%Y%m%d")}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Produit', 'Catégorie', 'Quantité', 'Prix unitaire', 'Montant total'])
+    
+    ventes = Vente.objects.select_related('produit', 'produit__categorie').all().order_by('-date_vente')
+    for vente in ventes:
+        writer.writerow([
+            vente.date_vente.strftime('%Y-%m-%d %H:%M'),
+            vente.produit.nom,
+            vente.produit.categorie.nom,
+            vente.quantite,
+            vente.prix_unitaire,
+            vente.montant_total
+        ])
+    
+    return response
+
+
+@login_required
+def ajouter_avis(request, produit_id):
+    """Ajouter un avis sur un produit"""
+    produit = get_object_or_404(Produit, id=produit_id, active=True)
+    
+    if request.method == 'POST':
+        note = int(request.POST.get('note', 5))
+        commentaire = request.POST.get('commentaire', '').strip()
+        
+        if 1 <= note <= 5:
+            avis, created = AvisProduit.objects.get_or_create(
+                produit=produit,
+                utilisateur=request.user,
+                defaults={
+                    'note': note,
+                    'commentaire': commentaire,
+                    'approuve': False  # Nécessite validation admin
+                }
+            )
+            
+            if not created:
+                avis.note = note
+                avis.commentaire = commentaire
+                avis.approuve = False
+                avis.save()
+            
+            messages.success(request, 'Votre avis a été enregistré. Il sera visible après validation.')
+            return redirect('detail_produit', produit_id=produit_id)
+    
+    return redirect('detail_produit', produit_id=produit_id)
 

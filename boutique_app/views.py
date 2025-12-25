@@ -464,26 +464,33 @@ def detail_commande(request, commande_id):
 
 @staff_member_required
 def export_ventes(request):
-    """Export des ventes en CSV"""
+    """Export des ventes en CSV (staff only)"""
     import csv
-    from django.http import HttpResponse
+    from django.http import HttpResponse, HttpResponseForbidden
     from datetime import datetime
     
+    # Sécurité: vérifier que l'utilisateur est bien staff
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Accès refusé")
+    
     response = HttpResponse(content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="ventes_{datetime.now().strftime("%Y%m%d")}.csv"'
+    # Sécurité: éviter les caractères spéciaux dans le nom de fichier
+    safe_date = datetime.now().strftime("%Y%m%d")
+    response['Content-Disposition'] = f'attachment; filename="ventes_{safe_date}.csv"'
     
     writer = csv.writer(response)
     writer.writerow(['Date', 'Produit', 'Catégorie', 'Quantité', 'Prix unitaire', 'Montant total'])
     
     ventes = Vente.objects.select_related('produit', 'produit__categorie').all().order_by('-date_vente')
     for vente in ventes:
+        # Échapper les données pour éviter les injections CSV
         writer.writerow([
             vente.date_vente.strftime('%Y-%m-%d %H:%M'),
-            vente.produit.nom,
-            vente.produit.categorie.nom,
+            str(vente.produit.nom),  # Convertir en string pour sécurité
+            str(vente.produit.categorie.nom),
             vente.quantite,
-            vente.prix_unitaire,
-            vente.montant_total
+            float(vente.prix_unitaire),
+            float(vente.montant_total)
         ])
     
     return response
